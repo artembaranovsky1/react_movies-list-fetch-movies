@@ -3,12 +3,14 @@ import './FindMovie.scss';
 import { getMovie } from '../../api';
 import { MovieCard } from '../MovieCard';
 import { Movie } from '../../types/Movie';
+import { MovieData } from '../../types/MovieData';
+import { ResponseError } from '../../types/ReponseError';
 
 type Props = {
   query: string;
   setQuery: (query: string) => void;
   movies: Movie[] | null;
-  setMovies: (movie: Movie | null) => void;
+  setMovies: React.Dispatch<React.SetStateAction<Movie[]>>;
 };
 
 export const FindMovie: React.FC<Props> = ({
@@ -22,15 +24,17 @@ export const FindMovie: React.FC<Props> = ({
   const [buttonFindAMovie, setButtonFindAMovie] = useState(false);
   const [haveError, setHaveError] = useState(false);
 
+  const apiKey = '601983d6';
+
   const moviesNotFound = movie?.Response === 'False';
 
-  const changeFindMovie = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const changeFindMovie = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
 
     setLoadingButtonFindAMovie(true);
 
-    getMovie(query)
-      .then(data => {
+    getMovie(query, apiKey)
+      .then((data: MovieData | ResponseError) => {
         setMovie(data);
 
         if (data.Response === 'False') {
@@ -43,7 +47,7 @@ export const FindMovie: React.FC<Props> = ({
       .finally(() => {
         setLoadingButtonFindAMovie(false);
       });
-  }
+  };
 
   return (
     <>
@@ -84,9 +88,7 @@ export const FindMovie: React.FC<Props> = ({
               disabled={!query.trim()}
               onClick={changeFindMovie}
             >
-              <p className={loadingButtonFindAMovie ? 'is-loading' : ''}>
-                Find a movie
-              </p>
+              Find a movie
             </button>
           </div>
 
@@ -100,6 +102,10 @@ export const FindMovie: React.FC<Props> = ({
                   event.preventDefault();
 
                   if (!movie) {
+                    return;
+                  }
+
+                  if (!movies) {
                     return;
                   }
 
